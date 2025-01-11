@@ -112,59 +112,43 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Example Code
 
 ```java
-package com.example.project;
+package com.conversion.currency.controller;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.*;
 
-@SpringBootApplication
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.conversion.currency.models.ConversionRequest;
+import com.conversion.currency.models.ConversionResponse;
+import com.conversion.currency.service.CurrencyService;
 
 @RestController
 @RequestMapping("/api")
-class CurrencyController {
+public class currencyController {
+    
+    @Autowired
+    private CurrencyService currencyService;
 
     @GetMapping("/rates")
-    public String getRates(@RequestParam(defaultValue = "USD") String base) {
-        // Logic to fetch exchange rates from an external API
-        return "Rates for base currency: " + base;
+    public ResponseEntity<Map<String, Double>> getExchangeRates(@RequestParam(defaultValue = "USD") String base) {
+        Map<String, Double> rates = currencyService.fetchExchangeRates(base);
+        return ResponseEntity.ok(rates);
     }
 
     @PostMapping("/convert")
-    public ConversionResponse convertCurrency(@RequestBody ConversionRequest request) {
-        // Logic to convert currency using fetched rates
-        double convertedAmount = request.getAmount() * 0.945; // Example conversion logic
-        return new ConversionResponse(request.getFrom(), request.getTo(), request.getAmount(), convertedAmount);
-    }
-}
-
-class ConversionRequest {
-    private String from;
-    private String to;
-    private double amount;
-
-    // Getters and setters
-}
-
-class ConversionResponse {
-    private String from;
-    private String to;
-    private double amount;
-    private double convertedAmount;
-
-    public ConversionResponse(String from, String to, double amount, double convertedAmount) {
-        this.from = from;
-        this.to = to;
-        this.amount = amount;
-        this.convertedAmount = convertedAmount;
+    public ResponseEntity<ConversionResponse> convertCurrency(@RequestBody ConversionRequest request) {
+        double convertedAmount = currencyService.convertCurrency(request.getFrom(), request.getTo(), request.getAmount());
+        ConversionResponse response = new ConversionResponse(request.getFrom(), request.getTo(), request.getAmount(), convertedAmount);
+        return ResponseEntity.ok(response);
     }
 
-    // Getters and setters
-}
+
 }
 ```
